@@ -500,7 +500,7 @@ const ExtensionSidebar = () => {
                         <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-500/30">
                           {submission.handle}
                         </Badge>
-                        <span className="text-xs text-slate-500">{formatTime(message.timestamp)}</span>
+                        <span className="text-xs text-slate-500">{formatTime(submission.timestamp)}</span>
                       </div>
                       <Trophy size={14} className="text-yellow-500" />
                     </div>
