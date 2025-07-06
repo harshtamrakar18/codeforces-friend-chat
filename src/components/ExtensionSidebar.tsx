@@ -278,246 +278,248 @@ const ExtensionSidebar = () => {
         )}
       </div>
 
-      <Tabs defaultValue="chat" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 border-b border-slate-700 flex-shrink-0">
-          <TabsTrigger value="chat" className="text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700">
-            Chat
-          </TabsTrigger>
-          <TabsTrigger value="notes" className="text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700">
-            Notes
-          </TabsTrigger>
-          <TabsTrigger value="submissions" className="text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700">
-            Recent
-          </TabsTrigger>
-        </TabsList>
+      <div className="flex-1 flex flex-col min-h-0">
+        <Tabs defaultValue="chat" className="flex-1 flex flex-col min-h-0">
+          <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 border-b border-slate-700 flex-shrink-0">
+            <TabsTrigger value="chat" className="text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700">
+              Chat
+            </TabsTrigger>
+            <TabsTrigger value="notes" className="text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700">
+              Notes
+            </TabsTrigger>
+            <TabsTrigger value="submissions" className="text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700">
+              Recent
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="chat" className="flex-1 flex flex-col m-0 min-h-0">
-          {/* Messages */}
-          <ScrollArea className="flex-1 p-3">
-            <div className="space-y-3">
-              {getFilteredMessages().map((message) => (
-                <div key={message.id} className={`${message.id === 'pinned' ? 'bg-blue-500/10 border border-blue-500/30 rounded-lg p-3' : ''}`}>
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-sm font-medium ${message.author === 'System' ? 'text-blue-400' : message.author === 'You' ? 'text-green-400' : 'text-purple-400'}`}>
-                          {message.author}
-                        </span>
-                        {message.recipient && (
-                          <span className="text-xs text-slate-500">→ {message.recipient}</span>
-                        )}
-                        <span className="text-xs text-slate-500">{formatTime(message.timestamp)}</span>
-                        {message.id === 'pinned' && (
-                          <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-300">
-                            Pinned
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-sm text-slate-200 break-words">
-                        {message.isCode ? 
-                          formatCodeContent(message.content) : 
-                          message.content.split('\n').map((line, idx) => (
-                            <div key={idx}>{line}</div>
-                          ))
-                        }
-                      </div>
-                      {message.tags.length > 0 && (
-                        <div className="flex gap-1 mt-2 flex-wrap">
-                          {message.tags.map(tag => (
-                            <Badge key={tag} variant="outline" className="text-xs border-slate-600 text-slate-400">
-                              #{tag}
+          <TabsContent value="chat" className="flex-1 flex flex-col m-0 min-h-0">
+            {/* Messages - Now takes up more space */}
+            <ScrollArea className="flex-1 p-3">
+              <div className="space-y-3">
+                {getFilteredMessages().map((message) => (
+                  <div key={message.id} className={`${message.id === 'pinned' ? 'bg-blue-500/10 border border-blue-500/30 rounded-lg p-3' : ''}`}>
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-sm font-medium ${message.author === 'System' ? 'text-blue-400' : message.author === 'You' ? 'text-green-400' : 'text-purple-400'}`}>
+                            {message.author}
+                          </span>
+                          {message.recipient && (
+                            <span className="text-xs text-slate-500">→ {message.recipient}</span>
+                          )}
+                          <span className="text-xs text-slate-500">{formatTime(message.timestamp)}</span>
+                          {message.id === 'pinned' && (
+                            <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-300">
+                              Pinned
                             </Badge>
-                          ))}
+                          )}
                         </div>
-                      )}
-                    </div>
-                    {message.id !== 'pinned' && (
-                      <div className="flex gap-1 flex-shrink-0">
-                        {!message.isSaved && (
+                        <div className="text-sm text-slate-200 break-words">
+                          {message.isCode ? 
+                            formatCodeContent(message.content) : 
+                            message.content.split('\n').map((line, idx) => (
+                              <div key={idx}>{line}</div>
+                            ))
+                          }
+                        </div>
+                        {message.tags.length > 0 && (
+                          <div className="flex gap-1 mt-2 flex-wrap">
+                            {message.tags.map(tag => (
+                              <Badge key={tag} variant="outline" className="text-xs border-slate-600 text-slate-400">
+                                #{tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {message.id !== 'pinned' && (
+                        <div className="flex gap-1 flex-shrink-0">
+                          {!message.isSaved && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowTagInput(message.id)}
+                              className="h-6 w-6 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
+                            >
+                              <Save size={12} />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setShowTagInput(message.id)}
-                            className="h-6 w-6 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
+                            onClick={() => resolveMessage(message.id)}
+                            className="h-6 w-6 p-0 text-slate-400 hover:text-green-400 hover:bg-slate-700"
                           >
-                            <Save size={12} />
+                            <Check size={12} />
                           </Button>
-                        )}
+                        </div>
+                      )}
+                    </div>
+                    {showTagInput === message.id && (
+                      <div className="mt-2 flex gap-2">
+                        <Input
+                          placeholder="Enter tags (comma-separated)"
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          className="h-7 text-xs bg-slate-800 border-slate-600 text-white"
+                        />
                         <Button
-                          variant="ghost"
                           size="sm"
-                          onClick={() => resolveMessage(message.id)}
-                          className="h-6 w-6 p-0 text-slate-400 hover:text-green-400 hover:bg-slate-700"
+                          onClick={() => saveMessage(message.id, tagInput.split(',').map(t => t.trim()).filter(Boolean))}
+                          className="h-7 px-2 bg-blue-600 hover:bg-blue-700"
                         >
-                          <Check size={12} />
+                          Save
                         </Button>
                       </div>
                     )}
                   </div>
-                  {showTagInput === message.id && (
-                    <div className="mt-2 flex gap-2">
-                      <Input
-                        placeholder="Enter tags (comma-separated)"
-                        value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        className="h-7 text-xs bg-slate-800 border-slate-600 text-white"
-                      />
-                      <Button
-                        size="sm"
-                        onClick={() => saveMessage(message.id, tagInput.split(',').map(t => t.trim()).filter(Boolean))}
-                        className="h-7 px-2 bg-blue-600 hover:bg-blue-700"
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-
-          {/* Input */}
-          <div className="p-3 border-t border-slate-700 bg-slate-800/50 flex-shrink-0">
-            <div className="flex items-center gap-2 mb-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsCodeMode(!isCodeMode)}
-                className={`h-7 px-2 text-xs ${isCodeMode ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
-              >
-                <Code size={14} className="mr-1" />
-                Code
-              </Button>
-              {chatMode === 'individual' && !selectedIndividualFriend && (
-                <span className="text-xs text-red-400">Select a friend first</span>
-              )}
-            </div>
-            <div className="flex gap-2">
-              {isCodeMode ? (
-                <textarea
-                  placeholder="Enter code..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())}
-                  className="flex-1 bg-slate-800 border-slate-600 text-white font-mono text-sm p-2 rounded resize-none min-h-[80px]"
-                  style={{ tabSize: 4 }}
-                />
-              ) : (
-                <Input
-                  placeholder="Type a message..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  className="bg-slate-800 border-slate-600 text-white"
-                />
-              )}
-              <Button 
-                onClick={sendMessage} 
-                size="sm" 
-                className="bg-blue-600 hover:bg-blue-700"
-                disabled={chatMode === 'individual' && !selectedIndividualFriend}
-              >
-                Send
-              </Button>
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="notes" className="flex-1 m-0 flex flex-col min-h-0">
-          {/* Filter Section */}
-          <div className="p-3 border-b border-slate-700 bg-slate-800/30 flex-shrink-0">
-            <div className="flex gap-2 items-center">
-              <Search size={16} className="text-slate-400" />
-              <Input
-                placeholder="Filter by tags..."
-                value={tagFilter}
-                onChange={(e) => setTagFilter(e.target.value)}
-                className="flex-1 h-8 bg-slate-800 border-slate-600 text-white text-xs"
-              />
-              {tagFilter && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setTagFilter('')}
-                  className="h-8 px-2 text-slate-400 hover:text-white"
-                >
-                  <X size={14} />
-                </Button>
-              )}
-            </div>
-            {getAllTags().length > 0 && (
-              <div className="flex gap-1 flex-wrap mt-2">
-                {getAllTags().map(tag => (
-                  <Badge
-                    key={tag}
-                    variant="outline"
-                    className="text-xs border-slate-600 text-slate-400 cursor-pointer hover:bg-slate-700"
-                    onClick={() => setTagFilter(tag)}
-                  >
-                    #{tag}
-                  </Badge>
                 ))}
               </div>
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="notes" className="flex-1 m-0 flex flex-col min-h-0">
+            {/* Filter Section */}
+            <div className="p-3 border-b border-slate-700 bg-slate-800/30 flex-shrink-0">
+              <div className="flex gap-2 items-center">
+                <Search size={16} className="text-slate-400" />
+                <Input
+                  placeholder="Filter by tags..."
+                  value={tagFilter}
+                  onChange={(e) => setTagFilter(e.target.value)}
+                  className="flex-1 h-8 bg-slate-800 border-slate-600 text-white text-xs"
+                />
+                {tagFilter && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTagFilter('')}
+                    className="h-8 px-2 text-slate-400 hover:text-white"
+                  >
+                    <X size={14} />
+                  </Button>
+                )}
+              </div>
+              {getAllTags().length > 0 && (
+                <div className="flex gap-1 flex-wrap mt-2">
+                  {getAllTags().map(tag => (
+                    <Badge
+                      key={tag}
+                      variant="outline"
+                      className="text-xs border-slate-600 text-slate-400 cursor-pointer hover:bg-slate-700"
+                      onClick={() => setTagFilter(tag)}
+                    >
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <ScrollArea className="flex-1 p-3">
+              <div className="space-y-3">
+                {getFilteredNotes().map((message) => (
+                  <Card key={message.id} className="bg-slate-800/50 border-slate-700">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm text-slate-200">{message.author}</CardTitle>
+                        <span className="text-xs text-slate-500">{formatTime(message.timestamp)}</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="text-sm text-slate-300 mb-2 break-words">
+                        {message.isCode ? formatCodeContent(message.content) : message.content}
+                      </div>
+                      <div className="flex gap-1 flex-wrap">
+                        {message.tags.map(tag => (
+                          <Badge key={tag} variant="outline" className="text-xs border-slate-600 text-slate-400">
+                            #{tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="submissions" className="flex-1 m-0 min-h-0">
+            <ScrollArea className="flex-1 p-3">
+              <div className="space-y-3">
+                {recentSubmissions.map((submission) => (
+                  <Card key={submission.id} className="bg-slate-800/50 border-slate-700">
+                    <CardContent className="p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+                            {submission.handle}
+                          </Badge>
+                          <span className="text-xs text-slate-500">{formatTime(submission.timestamp)}</span>
+                        </div>
+                        <Trophy size={14} className="text-yellow-500" />
+                      </div>
+                      <div className="text-sm text-slate-200 mb-1 break-words">{submission.problemName}</div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-400">Rating: {submission.problemRating}</span>
+                        <span className={`text-xs font-medium ${getVerdictColor(submission.verdict)}`}>
+                          {submission.verdict}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+
+        {/* Input - Now moved to bottom for more chat viewing space */}
+        <div className="p-3 border-t border-slate-700 bg-slate-800/50 flex-shrink-0">
+          <div className="flex items-center gap-2 mb-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCodeMode(!isCodeMode)}
+              className={`h-7 px-2 text-xs ${isCodeMode ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+            >
+              <Code size={14} className="mr-1" />
+              Code
+            </Button>
+            {chatMode === 'individual' && !selectedIndividualFriend && (
+              <span className="text-xs text-red-400">Select a friend first</span>
             )}
           </div>
-
-          <ScrollArea className="flex-1 p-3">
-            <div className="space-y-3">
-              {getFilteredNotes().map((message) => (
-                <Card key={message.id} className="bg-slate-800/50 border-slate-700">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm text-slate-200">{message.author}</CardTitle>
-                      <span className="text-xs text-slate-500">{formatTime(message.timestamp)}</span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="text-sm text-slate-300 mb-2 break-words">
-                      {message.isCode ? formatCodeContent(message.content) : message.content}
-                    </div>
-                    <div className="flex gap-1 flex-wrap">
-                      {message.tags.map(tag => (
-                        <Badge key={tag} variant="outline" className="text-xs border-slate-600 text-slate-400">
-                          #{tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent value="submissions" className="flex-1 m-0 min-h-0">
-          <ScrollArea className="flex-1 p-3">
-            <div className="space-y-3">
-              {recentSubmissions.map((submission) => (
-                <Card key={submission.id} className="bg-slate-800/50 border-slate-700">
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                          {submission.handle}
-                        </Badge>
-                        <span className="text-xs text-slate-500">{formatTime(submission.timestamp)}</span>
-                      </div>
-                      <Trophy size={14} className="text-yellow-500" />
-                    </div>
-                    <div className="text-sm text-slate-200 mb-1 break-words">{submission.problemName}</div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-400">Rating: {submission.problemRating}</span>
-                      <span className={`text-xs font-medium ${getVerdictColor(submission.verdict)}`}>
-                        {submission.verdict}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </ScrollArea>
-        </TabsContent>
-      </Tabs>
+          <div className="flex gap-2">
+            {isCodeMode ? (
+              <textarea
+                placeholder="Enter code..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())}
+                className="flex-1 bg-slate-800 border-slate-600 text-white font-mono text-sm p-2 rounded resize-none min-h-[80px]"
+                style={{ tabSize: 4 }}
+              />
+            ) : (
+              <Input
+                placeholder="Type a message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                className="bg-slate-800 border-slate-600 text-white"
+              />
+            )}
+            <Button 
+              onClick={sendMessage} 
+              size="sm" 
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={chatMode === 'individual' && !selectedIndividualFriend}
+            >
+              Send
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
