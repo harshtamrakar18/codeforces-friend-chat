@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, Code, Save, Check, X, Hash, Clock, Trophy } from 'lucide-react';
+import { MessageSquare, Code, Save, Check, X, Hash, Clock, Trophy, Users, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Message {
   id: string;
@@ -17,6 +18,7 @@ interface Message {
   isSaved: boolean;
   tags: string[];
   isResolved: boolean;
+  recipient?: string; // for individual messages
 }
 
 interface Friend {
@@ -44,6 +46,8 @@ const ExtensionSidebar = () => {
   const [tagInput, setTagInput] = useState('');
   const [showTagInput, setShowTagInput] = useState<string | null>(null);
   const [selectedFriends, setSelectedFriends] = useState<string[]>(['tourist', 'jiangly']);
+  const [chatMode, setChatMode] = useState<'group' | 'individual'>('group');
+  const [selectedIndividualFriend, setSelectedIndividualFriend] = useState<string>('');
 
   // Mock data
   const friends: Friend[] = [
@@ -100,7 +104,8 @@ const ExtensionSidebar = () => {
       isCode: isCodeMode,
       isSaved: false,
       tags: [],
-      isResolved: false
+      isResolved: false,
+      recipient: chatMode === 'individual' ? selectedIndividualFriend : undefined
     };
 
     setMessages(prev => [...prev, message]);
@@ -143,6 +148,26 @@ const ExtensionSidebar = () => {
     }
   };
 
+  const formatCodeContent = (content: string) => {
+    return (
+      <pre className="bg-slate-900 p-3 rounded border overflow-x-auto">
+        <code className="text-sm text-slate-200 whitespace-pre">{content}</code>
+      </pre>
+    );
+  };
+
+  const getFilteredMessages = () => {
+    if (chatMode === 'group') {
+      return messages.filter(msg => !msg.recipient);
+    } else {
+      return messages.filter(msg => 
+        msg.recipient === selectedIndividualFriend || 
+        (msg.author !== 'You' && msg.author === selectedIndividualFriend) ||
+        msg.id === 'pinned'
+      );
+    }
+  };
+
   if (!isExpanded) {
     return (
       <div className="fixed right-0 top-0 h-full w-12 bg-gradient-to-b from-slate-900 to-slate-800 border-l border-slate-700 flex flex-col items-center py-4 z-50">
@@ -176,20 +201,64 @@ const ExtensionSidebar = () => {
         </Button>
       </div>
 
-      {/* Friend Selection */}
+      {/* Chat Mode Selection */}
       <div className="p-3 border-b border-slate-700 bg-slate-800/30">
-        <div className="text-xs text-slate-400 mb-2">Chatting with:</div>
-        <div className="flex gap-1 flex-wrap">
-          {selectedFriends.map(handle => {
-            const friend = friends.find(f => f.handle === handle);
-            return (
-              <Badge key={handle} variant="secondary" className="text-xs bg-blue-500/20 text-blue-300 border-blue-500/30">
-                <div className={`w-2 h-2 rounded-full mr-1 ${friend?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
-                {handle}
-              </Badge>
-            );
-          })}
+        <div className="flex gap-2 mb-3">
+          <Button
+            variant={chatMode === 'group' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setChatMode('group')}
+            className="flex-1 text-xs"
+          >
+            <Users size={14} className="mr-1" />
+            Group
+          </Button>
+          <Button
+            variant={chatMode === 'individual' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setChatMode('individual')}
+            className="flex-1 text-xs"
+          >
+            <User size={14} className="mr-1" />
+            Individual
+          </Button>
         </div>
+
+        {chatMode === 'group' ? (
+          <div>
+            <div className="text-xs text-slate-400 mb-2">Group chat with:</div>
+            <div className="flex gap-1 flex-wrap">
+              {selectedFriends.map(handle => {
+                const friend = friends.find(f => f.handle === handle);
+                return (
+                  <Badge key={handle} variant="secondary" className="text-xs bg-blue-500/20 text-blue-300 border-blue-500/30">
+                    <div className={`w-2 h-2 rounded-full mr-1 ${friend?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                    {handle}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="text-xs text-slate-400 mb-2">Chat with:</div>
+            <Select value={selectedIndividualFriend} onValueChange={setSelectedIndividualFriend}>
+              <SelectTrigger className="w-full h-8 bg-slate-800 border-slate-600 text-white">
+                <SelectValue placeholder="Select a friend" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                {friends.map(friend => (
+                  <SelectItem key={friend.handle} value={friend.handle} className="text-white">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${friend.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                      {friend.handle}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue="chat" className="flex-1 flex flex-col">
@@ -208,7 +277,7 @@ const ExtensionSidebar = () => {
         <TabsContent value="chat" className="flex-1 flex flex-col m-0">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
-            {messages.map((message) => (
+            {getFilteredMessages().map((message) => (
               <div key={message.id} className={`${message.id === 'pinned' ? 'bg-blue-500/10 border border-blue-500/30 rounded-lg p-3' : ''}`}>
                 <div className="flex items-start gap-2">
                   <div className="flex-1">
@@ -216,6 +285,9 @@ const ExtensionSidebar = () => {
                       <span className={`text-sm font-medium ${message.author === 'System' ? 'text-blue-400' : message.author === 'You' ? 'text-green-400' : 'text-purple-400'}`}>
                         {message.author}
                       </span>
+                      {message.recipient && (
+                        <span className="text-xs text-slate-500">→ {message.recipient}</span>
+                      )}
                       <span className="text-xs text-slate-500">{formatTime(message.timestamp)}</span>
                       {message.id === 'pinned' && (
                         <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-300">
@@ -223,10 +295,13 @@ const ExtensionSidebar = () => {
                         </Badge>
                       )}
                     </div>
-                    <div className={`text-sm text-slate-200 ${message.isCode ? 'font-mono bg-slate-800 p-2 rounded border' : ''}`}>
-                      {message.content.split('\n').map((line, idx) => (
-                        <div key={idx}>{line}</div>
-                      ))}
+                    <div className="text-sm text-slate-200">
+                      {message.isCode ? 
+                        formatCodeContent(message.content) : 
+                        message.content.split('\n').map((line, idx) => (
+                          <div key={idx}>{line}</div>
+                        ))
+                      }
                     </div>
                     {message.tags.length > 0 && (
                       <div className="flex gap-1 mt-2">
@@ -294,16 +369,35 @@ const ExtensionSidebar = () => {
                 <Code size={14} className="mr-1" />
                 Code
               </Button>
+              {chatMode === 'individual' && !selectedIndividualFriend && (
+                <span className="text-xs text-red-400">Select a friend first</span>
+              )}
             </div>
             <div className="flex gap-2">
-              <Input
-                placeholder={isCodeMode ? "Enter code..." : "Type a message..."}
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                className={`bg-slate-800 border-slate-600 text-white ${isCodeMode ? 'font-mono' : ''}`}
-              />
-              <Button onClick={sendMessage} size="sm" className="bg-blue-600 hover:bg-blue-700">
+              {isCodeMode ? (
+                <textarea
+                  placeholder="Enter code..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())}
+                  className="flex-1 bg-slate-800 border-slate-600 text-white font-mono text-sm p-2 rounded resize-none min-h-[80px]"
+                  style={{ tabSize: 4 }}
+                />
+              ) : (
+                <Input
+                  placeholder="Type a message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                  className="bg-slate-800 border-slate-600 text-white"
+                />
+              )}
+              <Button 
+                onClick={sendMessage} 
+                size="sm" 
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={chatMode === 'individual' && !selectedIndividualFriend}
+              >
                 Send
               </Button>
             </div>
@@ -321,8 +415,8 @@ const ExtensionSidebar = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className={`text-sm text-slate-300 mb-2 ${message.isCode ? 'font-mono bg-slate-900 p-2 rounded' : ''}`}>
-                    {message.content}
+                  <div className="text-sm text-slate-300 mb-2">
+                    {message.isCode ? formatCodeContent(message.content) : message.content}
                   </div>
                   <div className="flex gap-1 flex-wrap">
                     {message.tags.map(tag => (
