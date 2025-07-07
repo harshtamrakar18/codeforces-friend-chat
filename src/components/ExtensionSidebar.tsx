@@ -4,8 +4,8 @@ import { MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useSidebarState } from './sidebar/hooks/useSidebarState';
-import { useCodeforces } from './sidebar/hooks/useCodeforces';
+import { SidebarProvider, useSidebarContext } from './sidebar/contexts/SidebarContext';
+import { CodeforcesProvider, useCodeforcesContext } from './sidebar/contexts/CodeforcesContext';
 import { SidebarHeader } from './sidebar/components/SidebarHeader';
 import { CodeforcesInput } from './sidebar/components/CodeforcesInput';
 import { ChatModeSelector } from './sidebar/components/ChatModeSelector';
@@ -15,17 +15,13 @@ import { NotesTab } from './sidebar/components/NotesTab';
 import { SubmissionsTab } from './sidebar/components/SubmissionsTab';
 import { Message } from './sidebar/types';
 
-const ExtensionSidebar = () => {
-  const sidebarState = useSidebarState();
-  const { fetchCodeforcesData } = useCodeforces();
+const ExtensionSidebarContent = () => {
+  const sidebarState = useSidebarContext();
+  const codeforcesData = useCodeforcesContext();
 
   const handleCodeforcesSubmit = () => {
-    if (sidebarState.codeforcesHandle.trim()) {
-      fetchCodeforcesData(
-        sidebarState.codeforcesHandle.trim(),
-        sidebarState.setFriends,
-        sidebarState.setCurrentUserHandle
-      );
+    if (codeforcesData.codeforcesHandle.trim()) {
+      codeforcesData.fetchCodeforcesData(codeforcesData.codeforcesHandle.trim());
     }
   };
 
@@ -34,8 +30,8 @@ const ExtensionSidebar = () => {
       const newGroup = {
         id: Date.now().toString(),
         name: sidebarState.newGroupName,
-        members: [...sidebarState.selectedGroupMembers, sidebarState.currentUserHandle],
-        createdBy: sidebarState.currentUserHandle
+        members: [...sidebarState.selectedGroupMembers, codeforcesData.currentUserHandle],
+        createdBy: codeforcesData.currentUserHandle
       };
       sidebarState.setGroupChats(prev => [...prev, newGroup]);
       sidebarState.setNewGroupName('');
@@ -165,19 +161,19 @@ const ExtensionSidebar = () => {
     <div className="fixed right-0 top-0 h-full w-96 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-l border-slate-700 shadow-2xl z-50 flex flex-col">
       <SidebarHeader onCollapse={() => sidebarState.setIsExpanded(false)} />
 
-      {!sidebarState.currentUserHandle && (
+      {!codeforcesData.currentUserHandle && (
         <CodeforcesInput
-          codeforcesHandle={sidebarState.codeforcesHandle}
-          setCodeforcesHandle={sidebarState.setCodeforcesHandle}
+          codeforcesHandle={codeforcesData.codeforcesHandle}
+          setCodeforcesHandle={codeforcesData.setCodeforcesHandle}
           onSubmit={handleCodeforcesSubmit}
         />
       )}
 
-      {sidebarState.currentUserHandle && (
+      {codeforcesData.currentUserHandle && (
         <ChatModeSelector
           chatMode={sidebarState.chatMode}
           setChatMode={sidebarState.setChatMode}
-          friends={sidebarState.friends}
+          friends={codeforcesData.friends}
           selectedIndividualFriend={sidebarState.selectedIndividualFriend}
           setSelectedIndividualFriend={sidebarState.setSelectedIndividualFriend}
           groupChats={sidebarState.groupChats}
@@ -234,7 +230,7 @@ const ExtensionSidebar = () => {
 
           <TabsContent value="submissions" className="flex-1 m-0 min-h-0 overflow-hidden">
             <SubmissionsTab
-              submissions={sidebarState.recentSubmissions}
+              submissions={codeforcesData.recentSubmissions}
               formatTime={formatTime}
               getVerdictColor={getVerdictColor}
             />
@@ -242,7 +238,7 @@ const ExtensionSidebar = () => {
         </Tabs>
 
         <ChatInput
-          currentUserHandle={sidebarState.currentUserHandle}
+          currentUserHandle={codeforcesData.currentUserHandle}
           chatMode={sidebarState.chatMode}
           selectedIndividualFriend={sidebarState.selectedIndividualFriend}
           selectedGroupChat={sidebarState.selectedGroupChat}
@@ -254,6 +250,16 @@ const ExtensionSidebar = () => {
         />
       </div>
     </div>
+  );
+};
+
+const ExtensionSidebar = () => {
+  return (
+    <CodeforcesProvider>
+      <SidebarProvider>
+        <ExtensionSidebarContent />
+      </SidebarProvider>
+    </CodeforcesProvider>
   );
 };
 
